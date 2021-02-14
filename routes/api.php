@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +17,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('me', 'AuthController@me');
-Route::post('login', 'AuthController@login');
-Route::post('register', 'AuthController@register');
-Route::post('logout', 'AuthController@logout');
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
+Route::get('/me', [AuthController::class, 'me']);
+
+Route::apiResource('products', ProductController::class);
+Route::apiResource('products/{product}/reviews', ReviewController::class)
+    ->only('store', 'update', 'destroy');

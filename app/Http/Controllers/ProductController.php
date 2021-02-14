@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Models\Review;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['index', 'show']);
+    }
     /**
      * Display a listing of the resource.
      *
@@ -14,19 +20,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
+        $products = Product::with('user:id,name')
+            ->withCount('reviews')
+            ->latest()
+            ->paginate(20);
+        return response()->json(['status' => true, 'products' => $products]);
     }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
+    
     /**
      * Store a newly created resource in storage.
      *
@@ -35,7 +35,31 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request
+            ->only(['name', 'description', 'price']), [
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->toJson()
+            ], 400);
+        }
+
+        $product = new Product;
+        $product->name = $request->name;
+        $product->description = $request->description;
+        $product->price = $request->price;
+
+        auth()->user()->products()->save($product);
+        return response()->json([
+            'status' => true,
+            'message' => 'Product successfully added',
+            'product' => $product
+        ]);
     }
 
     /**
@@ -46,18 +70,14 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Product $product)
-    {
-        //
+        $product->load(['reviews' => function ($query) {
+            $query->latest();
+        }, 'user']);
+        return response()->json([
+            'status' => true,
+            'message' => 'Product successfully fetched',
+            'product' => $product
+        ]);
     }
 
     /**
@@ -69,7 +89,37 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        if (auth()->user()->id !== $product->user_id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Action forbidden'
+            ]);
+        }
+
+        $validator = Validator::make($request
+            ->only(['name', 'description', 'price']), [
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->toJson()
+            ], 400);
+        }
+
+        $product->name = $request->name;
+        $product->description = $request->description;
+        $product->price = $request->price;
+        $product->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Product successfully updated',
+            'product' => $product
+        ]);
     }
 
     /**
@@ -80,6 +130,13 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        if (auth()->user()->id !== $product->user_id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Action forbidden'
+            ]);
+        }
+        $product->delete();
+        return response()->json(null, 204);
     }
 }
