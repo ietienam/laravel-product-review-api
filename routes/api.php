@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,10 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 Route::get('/me', [AuthController::class, 'me']);
+Route::get('/me/products', [UserController::class, 'myProducts']);
+Route::get('/users/{user}/products', [UserController::class, 'userProducts']);
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/users/{user}', [UserController::class, 'show']);
 
 Route::apiResource('products', ProductController::class);
 Route::apiResource('products/{product}/reviews', ReviewController::class)
