@@ -23,12 +23,18 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+
 Route::get('/me', [AuthController::class, 'me']);
 Route::get('/me/products', [UserController::class, 'myProducts']);
+
 Route::get('/users/{user}/products', [UserController::class, 'userProducts']);
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/users/{user}', [UserController::class, 'show']);
 
-Route::apiResource('products', ProductController::class);
+Route::patch('/products/{product}', [ProductController::class, 'update']);
+Route::patch('/products/reviews/{review}', [ReviewController::class, 'update']);
+
+Route::apiResource('products', ProductController::class)
+    ->only('index', 'show', 'store', 'destroy');
 Route::apiResource('products/{product}/reviews', ReviewController::class)
-    ->only('store', 'update', 'destroy');
+    ->only('store', 'destroy');

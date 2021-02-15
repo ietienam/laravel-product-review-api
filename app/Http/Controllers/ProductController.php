@@ -87,8 +87,9 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $id)
     {
+        $product = Product::find($id);
         if (auth()->user()->id !== $product->user_id) {
             return response()->json([
                 'status' => false,
@@ -98,9 +99,9 @@ class ProductController extends Controller
 
         $validator = Validator::make($request
             ->only(['name', 'description', 'price']), [
-            'name' => 'required|string',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
+            'name' => 'string',
+            'description' => 'string',
+            'price' => 'numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -110,10 +111,7 @@ class ProductController extends Controller
             ], 400);
         }
 
-        $product->name = $request->name;
-        $product->description = $request->description;
-        $product->price = $request->price;
-        $product->save();
+        $product->update($validator->validated());
 
         return response()->json([
             'status' => true,

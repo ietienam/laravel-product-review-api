@@ -10,6 +10,16 @@ class Review extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'rating',
+        'review',
+    ];
+
+    /**
      * Get the product the review belongs to
      */
     public function product()

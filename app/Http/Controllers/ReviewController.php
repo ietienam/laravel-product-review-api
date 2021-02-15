@@ -75,8 +75,9 @@ class ReviewController extends Controller
      * @param  \App\Models\Review  $review
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product, Review $review)
+    public function update(Request $request, $id)
     {
+        $review = Review::find($id);
         if (auth()->user()->id !== $review->user_id) {
             return response()->json([
                 'status' => false,
@@ -86,10 +87,11 @@ class ReviewController extends Controller
 
         $validator = Validator::make($request
             ->only(['review', 'rating']), [
-            'review' => 'required|string',
-            'rating' => 'required|numeric|min:0|max:5',
+            'review' => 'string',
+            'rating' => 'numeric|min:0|max:5',
         ]);
 
+        // return response()->json(['message' => $validator->validated()]);
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
@@ -97,10 +99,7 @@ class ReviewController extends Controller
             ], 400);
         }
 
-        $review = new Review;
-        $review->review = $request->review;
-        $review->rating = $request->rating;
-        $review->save();
+        $review->update($validator->validated());
         return response()->json([
             'status' => true,
             'message' => 'Review successfully updated',

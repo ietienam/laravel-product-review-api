@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -25,8 +26,8 @@ class UserController extends Controller
     public function show($id)
     {
         if (User::where('id', $id)->exists()) {
-            $user = User::where('id', $id)->get();
-            return response()->json(['status' => true, 'user' => $user[0]]);
+            $user = User::find($id);
+            return response()->json(['status' => true, 'user' => $user]);
         } else {
             return response()->json(['status' => false, 'message' => 'User does not exist']);
         }
@@ -34,19 +35,15 @@ class UserController extends Controller
 
     public function myProducts()
     {
-        if (Product::where('user_id', auth()->user()->id)->exists()) {
-            $products = Product::where('user_id', auth()->user()->id)->get();
-            return response()->json(['status' => true, 'user' => $products]);
-        } else {
-            return response()->json(['status' => false, 'message' => 'User does not have any products']);
-        }
+        return response()->json(['status' => true, 'products' => auth()->user()->products]);
+        // return response()->json(['status' => true, 'products' => auth()->user()->products]);
     }
 
     public function userProducts($id)
     {
-        if (Product::where('user_id', $id)->exists()) {
-            $products = Product::where('user_id', $id)->get();
-            return response()->json(['status' => true, 'user' => $products]);
+        $products = Product::where('user_id', $id)->get();
+        if (count($products) > 0) {
+            return response()->json(['status' => true, 'products' => $products]);
         } else {
             return response()->json(['status' => false, 'message' => 'User does not have any products']);
         }
